@@ -1,11 +1,9 @@
 # Build stage
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
-
-COPY movie-alert-system/pom.xml .
+COPY pom.xml .
 RUN mvn dependency:go-offline
-
-COPY movie-alert-system/src ./src
+COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Run stage
