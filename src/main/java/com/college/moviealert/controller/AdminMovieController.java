@@ -88,4 +88,10 @@ public class AdminMovieController {
             @PathVariable String theatreName) {
         return adminService.getShowsByMovieAndTheatre(movieName, theatreName);
     }
+
+    @GetMapping("/movies2")
+    public List<String> test() {
+        return List.of("controller works");
+    }
+
 }
