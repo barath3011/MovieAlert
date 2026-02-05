@@ -1,11 +1,12 @@
 package com.college.moviealert.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 public class User {
@@ -14,47 +15,38 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, unique = true)
     private String username;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false, unique = true)
+    private String phoneNumber;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String role; // USER or ADMIN
 
     public User() {}
 
-    // getters & setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
+    public User(String name, String username, String email,
+                String phoneNumber, String password) {
+        this.name = name;
         this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
+        this.email = email;
+        this.phoneNumber = phoneNumber;
         this.password = password;
+
     }
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public String getUsername() { return username; }
+    public String getEmail() { return email; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public String getPassword() { return password; }
 }
