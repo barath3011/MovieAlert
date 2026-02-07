@@ -9,6 +9,7 @@ import com.college.moviealert.entity.Theatre;
 import com.college.moviealert.service.AdminMovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -87,6 +88,32 @@ public class AdminMovieController {
             @PathVariable String movieName,
             @PathVariable String theatreName) {
         return adminService.getShowsByMovieAndTheatre(movieName, theatreName);
+    }
+
+    //  Available dates for movie
+    @GetMapping("movies/{movieName}/dates")
+    public List<LocalDate> getAvailableDates(@PathVariable String movieName) {
+        return adminService.getAvailableDates(movieName);
+    }
+
+    //  Theatres for movie + date
+    @GetMapping("movies/{movieName}/dates/{date}/theatres")
+    public List<Theatre> getTheatres(
+            @PathVariable String movieName,
+            @PathVariable LocalDate date) {
+
+        return adminService.getTheatresByMovieAndDate(movieName, date);
+    }
+
+
+    //  Shows for movie + date + theatre
+    @GetMapping("movies/{movieName}/dates/{date}/theatres/{theatreName}/shows")
+    public List<LocalTime> getShows(
+            @PathVariable String movieName,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @PathVariable String theatreName) {
+
+        return adminService.getShowTimes(movieName, date, theatreName);
     }
 
 

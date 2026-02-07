@@ -2,17 +2,14 @@ package com.college.moviealert.service;
 
 import com.college.moviealert.dto.CreateMovieRequest;
 import com.college.moviealert.dto.MovieShowBulkRequest;
-import com.college.moviealert.entity.Movie;
-import com.college.moviealert.entity.MovieShow;
-import com.college.moviealert.entity.Theatre;
-import com.college.moviealert.repository.MovieRepository;
-import com.college.moviealert.repository.MovieShowRepository;
-import com.college.moviealert.repository.TheatreRepository;
+import com.college.moviealert.entity.*;
+import com.college.moviealert.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,6 +23,7 @@ public class AdminMovieService {
 
     @Autowired
     private MovieShowRepository movieShowRepository;
+
 
     // ---------------- Create Movie ----------------
     public Movie createMovie(CreateMovieRequest request) {
@@ -122,6 +120,32 @@ public class AdminMovieService {
                         new Theatre(request.getTheatreName())
                 ));
 
+
+// Date
+//        ShowDate showDate = showDateRepository
+//                .findByShowDate(request.getShowDate())
+//                .orElseGet(() -> showDateRepository.save(
+//                        new ShowDate(request.getShowDate())
+//                ));
+//
+//        List<Show> shows = new ArrayList<>();
+//
+//        for (LocalTime time : request.getShowTimes()) {
+//
+//            String timeStr = time.toString(); // "09:00"
+//
+//            Show show = showRepository
+//                    .findByShowTime(timeStr)
+//                    .orElseGet(() -> showRepository.save(
+//                            new Show(timeStr)
+//                    ));
+//
+//            shows.add(show);
+//        }
+
+
+
+
         int insertedCount = 0;
 
         for (LocalTime time : request.getShowTimes()) {
@@ -158,12 +182,58 @@ public class AdminMovieService {
 
     // ---------------- GET SHOWS BY MOVIE ----------------
     public List<MovieShow> getShowsByMovie(String movieName) {
-        return movieShowRepository.findByMovieNameIgnoreCase(movieName);
+        return movieShowRepository.findByMovie_NameIgnoreCase(movieName);
     }
 
     // ---------------- GET SHOWS BY MOVIE + THEATRE ----------------
     public List<MovieShow> getShowsByMovieAndTheatre(String movieName, String theatreName) {
-        return movieShowRepository.findByMovieNameIgnoreCaseAndTheatreNameIgnoreCase(movieName, theatreName);
+        return movieShowRepository.findByMovie_NameIgnoreCaseAndTheatre_NameIgnoreCase(movieName, theatreName);
     }
+
+    //  Get available dates for a movie
+    public List<LocalDate> getAvailableDates(String movieName) {
+
+        Movie movie = movieRepository.findByNameIgnoreCase(movieName)
+                .orElseThrow(() -> new RuntimeException("Movie not found"));
+
+        return movieShowRepository.findAvailableDatesByMovie(movie.getId());
+    }
+
+
+    //  Get theatres for movie + date
+    public List<Theatre> getTheatresByMovieAndDate(String movieName, LocalDate date) {
+
+        Movie movie = movieRepository.findByNameIgnoreCase(movieName)
+                .orElseThrow(() -> new RuntimeException("Movie not found"));
+
+        return movieShowRepository.findTheatresByMovieAndDate(
+                movie.getId(),
+                date
+        );
+    }
+
+
+    //  Get shows for movie + date + theatre
+    public List<LocalTime> getShowTimes(
+            String movieName,
+            LocalDate date,
+            String theatreName
+    ) {
+
+        Movie movie = movieRepository.findByNameIgnoreCase(movieName)
+                .orElseThrow(() -> new RuntimeException("Movie not found"));
+
+        Theatre theatre = theatreRepository.findByNameIgnoreCase(theatreName)
+                .orElseThrow(() -> new RuntimeException("Theatre not found"));
+
+        return movieShowRepository.findShowTimesByMovieDateAndTheatre(
+                movie.getId(),
+                theatre.getId(),
+                date
+        );
+    }
+
+
+
 
 }
