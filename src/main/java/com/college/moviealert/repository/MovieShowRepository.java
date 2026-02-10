@@ -62,4 +62,5 @@ public interface MovieShowRepository extends JpaRepository<MovieShow, Long> {
 
     List<MovieShow> findByMovie_NameIgnoreCaseOrderByShowDateAscShowTimeAsc(String movieName);
 
+    List<MovieShow> findAllByOrderByMovie_NameAscShowDateAscShowTimeAsc();
 }

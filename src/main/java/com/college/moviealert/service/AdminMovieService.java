@@ -345,66 +345,77 @@ public class AdminMovieService {
     }
 
 
-    public MovieWrapperDTO getTheatresAndShowsByMovie(String movieName) {
+    public MovieWrapperDTO getAllMoviesTheatresAndShows() {
 
         List<MovieShow> shows =
-                movieShowRepository.findByMovie_NameIgnoreCaseOrderByShowDateAscShowTimeAsc(movieName);
+                movieShowRepository.findAllByOrderByMovie_NameAscShowDateAscShowTimeAsc();
 
         if (shows.isEmpty()) {
-            throw new RuntimeException("No shows found for movie");
+            throw new RuntimeException("No shows available");
         }
 
-        Movie movie = shows.get(0).getMovie();
-
-        Map<LocalDate, Map<Theatre, List<String>>> groupedData = new LinkedHashMap<>();
+        // Movie → Date → Theatre → Times
+        Map<Movie, Map<LocalDate, Map<Theatre, List<String>>>> groupedData = new LinkedHashMap<>();
 
         for (MovieShow show : shows) {
 
             groupedData
+                    .computeIfAbsent(show.getMovie(), m -> new LinkedHashMap<>())
                     .computeIfAbsent(show.getShowDate(), d -> new LinkedHashMap<>())
                     .computeIfAbsent(show.getTheatre(), t -> new ArrayList<>())
                     .add(show.getShowTime().toString());
         }
 
-        List<DateDTO> dateDTOs = new ArrayList<>();
+        List<MovieResponseDTO> movieDTOs = new ArrayList<>();
 
-        for (var dateEntry : groupedData.entrySet()) {
+        for (var movieEntry : groupedData.entrySet()) {
 
-            LocalDate showDate = dateEntry.getKey();
+            Movie movie = movieEntry.getKey();
+            Map<LocalDate, Map<Theatre, List<String>>> dateMap = movieEntry.getValue();
 
-            DateDTO dateDTO = new DateDTO();
-            dateDTO.setDay(showDate.getMonth().toString().substring(0, 3));
-            dateDTO.setDate(String.format("%02d", showDate.getDayOfMonth()));
-            dateDTO.setLabel(showDate.getDayOfWeek().toString().substring(0, 3));
+            List<DateDTO> dateDTOs = new ArrayList<>();
 
-            List<TheatreShowDTO> theatreDTOs = new ArrayList<>();
+            for (var dateEntry : dateMap.entrySet()) {
 
-            for (var theatreEntry : dateEntry.getValue().entrySet()) {
+                LocalDate showDate = dateEntry.getKey();
 
-                Theatre theatre = theatreEntry.getKey();
+                DateDTO dateDTO = new DateDTO();
+                dateDTO.setDay(showDate.getMonth().toString().substring(0, 3));
+                dateDTO.setDate(String.format("%02d", showDate.getDayOfMonth()));
+                dateDTO.setLabel(showDate.getDayOfWeek().toString().substring(0, 3));
 
-                TheatreShowDTO theatreDTO = new TheatreShowDTO();
-                theatreDTO.setId(theatre.getId());
-                theatreDTO.setName(theatre.getName());
-                theatreDTO.setTimes(theatreEntry.getValue());
+                List<TheatreShowDTO> theatreDTOs = new ArrayList<>();
 
-                theatreDTOs.add(theatreDTO);
+                for (var theatreEntry : dateEntry.getValue().entrySet()) {
+
+                    Theatre theatre = theatreEntry.getKey();
+
+                    TheatreShowDTO theatreDTO = new TheatreShowDTO();
+                    theatreDTO.setId(theatre.getId());
+                    theatreDTO.setName(theatre.getName());
+                    theatreDTO.setTimes(theatreEntry.getValue());
+
+                    theatreDTOs.add(theatreDTO);
+                }
+
+                dateDTO.setTheatres(theatreDTOs);
+                dateDTOs.add(dateDTO);
             }
 
-            dateDTO.setTheatres(theatreDTOs);
-            dateDTOs.add(dateDTO);
+            MovieResponseDTO movieDTO = new MovieResponseDTO();
+            movieDTO.setId(movie.getId());
+            movieDTO.setName(movie.getName());
+            movieDTO.setDates(dateDTOs);
+
+            movieDTOs.add(movieDTO);
         }
 
-        MovieResponseDTO movieDTO = new MovieResponseDTO();
-        movieDTO.setId(movie.getId());
-        movieDTO.setName(movie.getName());
-        movieDTO.setDates(dateDTOs);
-
         MovieWrapperDTO wrapper = new MovieWrapperDTO();
-        wrapper.setTheatre(List.of(movieDTO));
+        wrapper.setTheatre(movieDTOs);
 
         return wrapper;
     }
+
 
 
 }

@@ -133,12 +133,11 @@ public class AdminMovieController {
 //        return adminService.getActivePreferences(email);
 //    }
 
-    @GetMapping("/movies/{movieName}/theatres-shows")
-    public MovieWrapperDTO getMovieTheatresAndShows(
-            @PathVariable String movieName) {
-
-        return adminService.getTheatresAndShowsByMovie(movieName);
+    @GetMapping("/movies/theatres-shows")
+    public MovieWrapperDTO getAllMoviesTheatresAndShows() {
+        return adminService.getAllMoviesTheatresAndShows();
     }
+
 
 
 
