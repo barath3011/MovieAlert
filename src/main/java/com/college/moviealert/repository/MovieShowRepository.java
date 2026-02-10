@@ -59,4 +59,7 @@ public interface MovieShowRepository extends JpaRepository<MovieShow, Long> {
             @Param("theatreId") Long theatreId,
             @Param("date") LocalDate date
     );
+
+    List<MovieShow> findByMovie_NameIgnoreCaseOrderByShowDateAscShowTimeAsc(String movieName);
+
 }

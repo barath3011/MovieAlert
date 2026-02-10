@@ -1,16 +1,18 @@
 package com.college.moviealert.service;
 
-import com.college.moviealert.dto.CreateMovieRequest;
-import com.college.moviealert.dto.MovieShowBulkRequest;
+import com.college.moviealert.dto.*;
 import com.college.moviealert.entity.*;
 import com.college.moviealert.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AdminMovieService {
@@ -23,6 +25,12 @@ public class AdminMovieService {
 
     @Autowired
     private MovieShowRepository movieShowRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private UserPreferenceRepository userPreferenceRepository;
 
 
     // ---------------- Create Movie ----------------
@@ -234,6 +242,169 @@ public class AdminMovieService {
     }
 
 
+    private Movie resolveMovie(UserPreferenceRequest request) {
+
+        if (request.getMovieId() != null) {
+            return movieRepository.findById(request.getMovieId())
+                    .orElseThrow(() -> new RuntimeException("Movie not found by ID"));
+        }
+
+        if (request.getMovieName() != null && !request.getMovieName().isBlank()) {
+            return movieRepository.findByNameIgnoreCase(request.getMovieName())
+                    .orElseThrow(() -> new RuntimeException("Movie not found by name"));
+        }
+
+        throw new RuntimeException("Movie ID or Movie Name must be provided");
+    }
+
+
+    private List<Theatre> resolveTheatres(UserPreferenceRequest request) {
+
+        List<Theatre> theatres = new ArrayList<>();
+
+        if (request.getTheatreIds() != null) {
+            for (Long id : request.getTheatreIds()) {
+                Theatre theatre = theatreRepository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Theatre not found by ID: " + id));
+                theatres.add(theatre);
+            }
+        }
+
+        if (request.getTheatreNames() != null) {
+            for (String name : request.getTheatreNames()) {
+                Theatre theatre = theatreRepository.findByNameIgnoreCase(name)
+                        .orElseThrow(() -> new RuntimeException("Theatre not found by name: " + name));
+                theatres.add(theatre);
+            }
+        }
+
+        if (theatres.isEmpty()) {
+            throw new RuntimeException("At least one theatre ID or name must be provided");
+        }
+
+        return theatres;
+    }
+
+
+    public String savePreference(UserPreferenceRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Movie movie = resolveMovie(request);
+
+        List<Theatre> theatres = resolveTheatres(request);
+
+        boolean anyNewSaved = false;
+
+        for (Theatre theatre : theatres) {
+            for (LocalDate date : request.getShowDates()) {
+                for (LocalTime time : request.getShowTimes()) {
+
+                    boolean exists =
+                            userPreferenceRepository
+                                    .existsByUserAndMovieAndTheatreAndShowDateAndShowTime(
+                                            user,
+                                            movie,
+                                            theatre,
+                                            date,
+                                            time
+                                    );
+
+                    if (exists) {
+                        continue;
+                    }
+
+                    UserPreference pref = new UserPreference();
+                    pref.setUser(user);
+                    pref.setMovie(movie);
+                    pref.setTheatre(theatre);
+                    pref.setShowDate(date);
+                    pref.setShowTime(time);
+
+                    userPreferenceRepository.save(pref);
+                    anyNewSaved = true;
+                }
+            }
+        }
+
+        if (!anyNewSaved) {
+            return "Preference already exists";
+        }
+
+        return "New preference saved for existing movie";
+    }
+
+
+    public List<UserPreference> getActivePreferences(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return userPreferenceRepository.findByUser(user);
+    }
+
+
+    public MovieWrapperDTO getTheatresAndShowsByMovie(String movieName) {
+
+        List<MovieShow> shows =
+                movieShowRepository.findByMovie_NameIgnoreCaseOrderByShowDateAscShowTimeAsc(movieName);
+
+        if (shows.isEmpty()) {
+            throw new RuntimeException("No shows found for movie");
+        }
+
+        Movie movie = shows.get(0).getMovie();
+
+        Map<LocalDate, Map<Theatre, List<String>>> groupedData = new LinkedHashMap<>();
+
+        for (MovieShow show : shows) {
+
+            groupedData
+                    .computeIfAbsent(show.getShowDate(), d -> new LinkedHashMap<>())
+                    .computeIfAbsent(show.getTheatre(), t -> new ArrayList<>())
+                    .add(show.getShowTime().toString());
+        }
+
+        List<DateDTO> dateDTOs = new ArrayList<>();
+
+        for (var dateEntry : groupedData.entrySet()) {
+
+            LocalDate showDate = dateEntry.getKey();
+
+            DateDTO dateDTO = new DateDTO();
+            dateDTO.setDay(showDate.getMonth().toString().substring(0, 3));
+            dateDTO.setDate(String.format("%02d", showDate.getDayOfMonth()));
+            dateDTO.setLabel(showDate.getDayOfWeek().toString().substring(0, 3));
+
+            List<TheatreShowDTO> theatreDTOs = new ArrayList<>();
+
+            for (var theatreEntry : dateEntry.getValue().entrySet()) {
+
+                Theatre theatre = theatreEntry.getKey();
+
+                TheatreShowDTO theatreDTO = new TheatreShowDTO();
+                theatreDTO.setId(theatre.getId());
+                theatreDTO.setName(theatre.getName());
+                theatreDTO.setTimes(theatreEntry.getValue());
+
+                theatreDTOs.add(theatreDTO);
+            }
+
+            dateDTO.setTheatres(theatreDTOs);
+            dateDTOs.add(dateDTO);
+        }
+
+        MovieResponseDTO movieDTO = new MovieResponseDTO();
+        movieDTO.setId(movie.getId());
+        movieDTO.setName(movie.getName());
+        movieDTO.setDates(dateDTOs);
+
+        MovieWrapperDTO wrapper = new MovieWrapperDTO();
+        wrapper.setTheatre(List.of(movieDTO));
+
+        return wrapper;
+    }
 
 
 }

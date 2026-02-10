@@ -1,87 +1,55 @@
-//package com.college.moviealert.entity;
-//
-//import jakarta.persistence.*;
-//import java.time.LocalDate;
-//
-//@Entity
-//@Table(name = "user_preference")
-//public class UserPreference {
-//
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private Long id;
-//
-//    @ManyToOne
-//    @JoinColumn(name = "user_id", nullable = false)
-//    private User user;
-//
-//    @Column(nullable = false)
-//    private String movieName;
-//
-//    @Column(nullable = false)
-//    private String city;
-//
-//    @Column(nullable = false)
-//    private LocalDate fromDate;
-//
-//    @Column(nullable = false)
-//    private LocalDate toDate;
-//
-//    @Column(nullable = false)
-//    private String status; // ACTIVE / COMPLETED
-//
-//    public UserPreference() {}
-//
-//    // getters & setters
-//    public Long getId() {
-//        return id;
-//    }
-//
-//    public User getUser() {
-//        return user;
-//    }
-//
-//    public void setUser(User user) {
-//        this.user = user;
-//    }
-//
-//    public String getMovieName() {
-//        return movieName;
-//    }
-//
-//    public void setMovieName(String movieName) {
-//        this.movieName = movieName;
-//    }
-//
-//    public String getCity() {
-//        return city;
-//    }
-//
-//    public void setCity(String city) {
-//        this.city = city;
-//    }
-//
-//    public LocalDate getFromDate() {
-//        return fromDate;
-//    }
-//
-//    public void setFromDate(LocalDate fromDate) {
-//        this.fromDate = fromDate;
-//    }
-//
-//    public LocalDate getToDate() {
-//        return toDate;
-//    }
-//
-//    public void setToDate(LocalDate toDate) {
-//        this.toDate = toDate;
-//    }
-//
-//    public String getStatus() {
-//        return status;
-//    }
-//
-//    public void setStatus(String status) {
-//        this.status = status;
-//    }
-//}
+package com.college.moviealert.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+@Entity
+@Table(
+        name = "user_preference",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        columnNames = {
+                                "user_id",
+                                "movie_id",
+                                "theatre_id",
+                                "show_date",
+                                "show_time"
+                        }
+                )
+        }
+)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserPreference {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // 🔹 User
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    // 🔹 Movie
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "movie_id")
+    private Movie movie;
+
+    // 🔹 Theatre (ONE per row)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "theatre_id")
+    private Theatre theatre;
+
+    // 🔹 Date (ONE per row)
+    @Column(name = "show_date", nullable = false)
+    private LocalDate showDate;
+
+    // 🔹 Time (ONE per row)
+    @Column(name = "show_time", nullable = false)
+    private LocalTime showTime;
+}

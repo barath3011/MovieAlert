@@ -1,12 +1,12 @@
 package com.college.moviealert.controller;
 
-import com.college.moviealert.dto.CreateMovieRequest;
-import com.college.moviealert.dto.MovieShowBulkRequest;
-import com.college.moviealert.dto.MovieShowRequest;
+import com.college.moviealert.dto.*;
 import com.college.moviealert.entity.Movie;
 import com.college.moviealert.entity.MovieShow;
 import com.college.moviealert.entity.Theatre;
+import com.college.moviealert.entity.UserPreference;
 import com.college.moviealert.service.AdminMovieService;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -115,6 +115,31 @@ public class AdminMovieController {
 
         return adminService.getShowTimes(movieName, date, theatreName);
     }
+
+
+    @PostMapping("/preferences")
+    public String savePreference(@RequestBody UserPreferenceRequest request) {
+        return adminService.savePreference(request);
+    }
+
+//    @GetMapping("/preferences/active")
+//    public List<UserPreference> getMyActivePreferences() {
+//
+//        Authentication auth =
+//                SecurityContextHolder.getContext().getAuthentication();
+//
+//        String email = auth.getName(); // comes from JWT (sub)
+//
+//        return adminService.getActivePreferences(email);
+//    }
+
+    @GetMapping("/movies/{movieName}/theatres-shows")
+    public MovieWrapperDTO getMovieTheatresAndShows(
+            @PathVariable String movieName) {
+
+        return adminService.getTheatresAndShowsByMovie(movieName);
+    }
+
 
 
 
