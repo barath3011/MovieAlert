@@ -35,6 +35,10 @@ public class AdminMovieService {
     @Autowired
     private UserPreferenceRepository userPreferenceRepository;
 
+    @Autowired
+    private UpcomingMovieRepository upcomingMovieRepository;
+
+
 
     // ---------------- Create Movie ----------------
     public Movie createMovie(CreateMovieRequest request) {
@@ -419,6 +423,14 @@ public class AdminMovieService {
         wrapper.setTheatre(movieDTOs);
 
         return wrapper;
+    }
+
+    public UpcomingMovie addMovie(UpcomingMovie movie) {
+        return upcomingMovieRepository.save(movie);
+    }
+
+    public List<UpcomingMovie> getAllUpcomingMovies() {
+        return upcomingMovieRepository.findAll();
     }
 
 

@@ -1,15 +1,10 @@
 package com.college.moviealert.controller;
 
 import com.college.moviealert.dto.*;
-import com.college.moviealert.entity.Movie;
-import com.college.moviealert.entity.MovieShow;
-import com.college.moviealert.entity.Theatre;
-import com.college.moviealert.entity.UserPreference;
+import com.college.moviealert.entity.*;
 import com.college.moviealert.service.AdminMovieService;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -136,6 +131,18 @@ public class AdminMovieController {
     @GetMapping("/movies/theatres-shows")
     public MovieWrapperDTO getAllMoviesTheatresAndShows() {
         return adminService.getAllMoviesTheatresAndShows();
+    }
+
+    // Add movie (JSON input)
+    @PostMapping("/upcoming-movie")
+    public UpcomingMovie addMovie(@RequestBody UpcomingMovie movie) {
+        return adminService.addMovie(movie);
+    }
+
+    // Get all movies
+    @GetMapping("/upcoming-movie")
+    public List<UpcomingMovie> getAllUpcomingMovies() {
+        return adminService.getAllUpcomingMovies();
     }
 
 
