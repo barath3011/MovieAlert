@@ -14,8 +14,6 @@ import java.util.List;
 
 public class UserPreferenceRequest {
 
-    private String email;
-
     // Movie (either one)
     private Long movieId;
     private String movieName;

@@ -14,20 +14,23 @@ import java.util.Optional;
 public interface UserPreferenceRepository
         extends JpaRepository<UserPreference, Long> {
 
-    boolean existsByUserAndMovie(User user, Movie movie);
+    boolean existsByUserAndMovieName(
+            User user,
+            String movieName
+    );
 
 
     List<UserPreference> findByUser(User user);
 
 
-    boolean existsByUserAndMovieAndTheatreAndShowDateAndShowTime(
+
+    boolean existsByUserAndMovieNameAndTheatreNameAndShowDateAndShowTime(
             User user,
-            Movie movie,
-            Theatre theatre,
+            String movieName,
+            String theatreName,
             LocalDate showDate,
             LocalTime showTime
     );
-
 
 }
 

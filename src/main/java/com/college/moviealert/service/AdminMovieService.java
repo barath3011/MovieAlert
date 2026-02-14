@@ -5,6 +5,9 @@ import com.college.moviealert.entity.*;
 import com.college.moviealert.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -288,25 +291,26 @@ public class AdminMovieService {
 
     public String savePreference(UserPreferenceRequest request) {
 
-        User user = userRepository.findByEmail(request.getEmail())
+        // 🔹 Get logged-in user from SecurityContext
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Movie movie = resolveMovie(request);
-
-        List<Theatre> theatres = resolveTheatres(request);
 
         boolean anyNewSaved = false;
 
-        for (Theatre theatre : theatres) {
+        for (String theatreName : request.getTheatreNames()) {
             for (LocalDate date : request.getShowDates()) {
                 for (LocalTime time : request.getShowTimes()) {
 
                     boolean exists =
                             userPreferenceRepository
-                                    .existsByUserAndMovieAndTheatreAndShowDateAndShowTime(
+                                    .existsByUserAndMovieNameAndTheatreNameAndShowDateAndShowTime(
                                             user,
-                                            movie,
-                                            theatre,
+                                            request.getMovieName(),
+                                            theatreName,
                                             date,
                                             time
                                     );
@@ -317,8 +321,8 @@ public class AdminMovieService {
 
                     UserPreference pref = new UserPreference();
                     pref.setUser(user);
-                    pref.setMovie(movie);
-                    pref.setTheatre(theatre);
+                    pref.setMovieName(request.getMovieName());
+                    pref.setTheatreName(theatreName);
                     pref.setShowDate(date);
                     pref.setShowTime(time);
 
@@ -332,8 +336,9 @@ public class AdminMovieService {
             return "Preference already exists";
         }
 
-        return "New preference saved for existing movie";
+        return "New preference saved successfully";
     }
+
 
 
     public List<UserPreference> getActivePreferences(String email) {

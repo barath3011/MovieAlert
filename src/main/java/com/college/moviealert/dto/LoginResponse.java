@@ -2,25 +2,17 @@ package com.college.moviealert.dto;
 
 public class LoginResponse {
 
-    private Long userId;
+    private Long id;
     private String username;
-    private String message;
+    private String token;
 
-    public LoginResponse(Long userId, String username, String message) {
-        this.userId = userId;
+    public LoginResponse(Long id, String username, String token) {
+        this.id = id;
         this.username = username;
-        this.message = message;
+        this.token = token;
     }
 
-    public Long getUserId() {
-        return userId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getMessage() {
-        return message;
-    }
+    public Long getId() { return id; }
+    public String getUsername() { return username; }
+    public String getToken() { return token; }
 }
