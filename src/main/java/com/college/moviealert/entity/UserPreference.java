@@ -1,11 +1,13 @@
 package com.college.moviealert.entity;
 
+import com.college.moviealert.enums.PreferenceStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+
 @Entity
 @Table(
         name = "user_preference",
@@ -24,6 +26,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class UserPreference {
 
     @Id
@@ -46,4 +49,9 @@ public class UserPreference {
 
     @Column(name = "show_time", nullable = false)
     private LocalTime showTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private PreferenceStatus status = PreferenceStatus.ACTIVE;
+
 }

@@ -2,6 +2,7 @@ package com.college.moviealert.service;
 
 import com.college.moviealert.dto.*;
 import com.college.moviealert.entity.*;
+import com.college.moviealert.enums.PreferenceStatus;
 import com.college.moviealert.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminMovieService {
@@ -432,6 +434,129 @@ public class AdminMovieService {
     public List<UpcomingMovie> getAllUpcomingMovies() {
         return upcomingMovieRepository.findAll();
     }
+
+//    public List<UserPreferenceResponse> getPreferencesByUser(Long userId) {
+//
+//        List<UserPreference> preferences = userPreferenceRepository.findByUserId(userId);
+//
+//        Map<String, List<UserPreference>> grouped =
+//                preferences.stream()
+//                        .collect(Collectors.groupingBy(
+//                                p -> p.getMovieName() + "_" + p.getShowDate()
+//                        ));
+//
+//        List<UserPreferenceResponse> response = new ArrayList<>();
+//
+//        for (String key : grouped.keySet()) {
+//
+//            List<UserPreference> group = grouped.get(key);
+//
+//            String movieName = group.get(0).getMovieName();
+//            LocalDate showDate = group.get(0).getShowDate();
+//
+//            List<String> theatreNames = group.stream()
+//                    .map(UserPreference::getTheatreName)
+//                    .distinct()
+//                    .toList();
+//
+//            List<LocalTime> showTimes = group.stream()
+//                    .map(UserPreference::getShowTime)
+//                    .distinct()
+//                    .toList();
+//
+//            response.add(new UserPreferenceResponse(
+//                    movieName,
+//                    theatreNames,
+//                    showTimes,
+//                    showDate
+//            ));
+//        }
+//
+//        return response;
+//    }
+
+    public List<UserPreferenceResponse> getActivePreferencesByEmail(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<UserPreference> preferences =
+                userPreferenceRepository
+                        .findByUserIdAndStatus(user.getId(), PreferenceStatus.ACTIVE);
+
+        return groupPreferences(preferences);
+    }
+    public List<UserPreferenceResponse> getCompletedPreferencesByEmail(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<UserPreference> preferences =
+                userPreferenceRepository
+                        .findByUserIdAndStatus(user.getId(), PreferenceStatus.COMPLETED);
+
+        return groupPreferences(preferences);
+    }
+
+    private List<UserPreferenceResponse> groupPreferences(List<UserPreference> preferences) {
+
+        Map<String, List<UserPreference>> grouped =
+                preferences.stream()
+                        .collect(Collectors.groupingBy(
+                                p -> p.getMovieName() + "_" + p.getShowDate()
+                        ));
+
+        List<UserPreferenceResponse> response = new ArrayList<>();
+
+        for (String key : grouped.keySet()) {
+
+            List<UserPreference> group = grouped.get(key);
+
+            String movieName = group.get(0).getMovieName();
+            LocalDate showDate = group.get(0).getShowDate();
+
+            // ✅ Collect preference IDs
+            List<Long> preferenceIds = group.stream()
+                    .map(UserPreference::getId)
+                    .toList();
+
+            List<String> theatreNames = group.stream()
+                    .map(UserPreference::getTheatreName)
+                    .distinct()
+                    .toList();
+
+            List<LocalTime> showTimes = group.stream()
+                    .map(UserPreference::getShowTime)
+                    .distinct()
+                    .toList();
+
+            response.add(new UserPreferenceResponse(
+                    preferenceIds,   // 👈 PASS HERE
+                    movieName,
+                    theatreNames,
+                    showTimes,
+                    showDate
+            ));
+        }
+
+        return response;
+    }
+
+
+
+    public void completePreferences(List<Long> preferenceIds) {
+
+        List<UserPreference> preferences =
+                userPreferenceRepository.findAllById(preferenceIds);
+
+        for (UserPreference pref : preferences) {
+            pref.setStatus(PreferenceStatus.COMPLETED);
+        }
+
+        userPreferenceRepository.saveAll(preferences);
+    }
+
+
 
 
 

@@ -5,6 +5,7 @@ import com.college.moviealert.entity.*;
 import com.college.moviealert.service.AdminMovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -144,6 +145,33 @@ public class AdminMovieController {
     public List<UpcomingMovie> getAllUpcomingMovies() {
         return adminService.getAllUpcomingMovies();
     }
+
+
+    @GetMapping("/preferences/active")
+    public List<UserPreferenceResponse> getActive(Authentication authentication) {
+
+        String email = authentication.getName();   // extracted from JWT
+
+        return adminService.getActivePreferencesByEmail(email);
+    }
+
+    @GetMapping("/preferences/completed")
+    public List<UserPreferenceResponse> getCompleted(Authentication authentication) {
+
+        String email = authentication.getName();
+
+        return adminService.getCompletedPreferencesByEmail(email);
+    }
+
+
+    @PutMapping("/complete")
+    public String complete(@RequestBody CompleteRequest request) {
+        adminService.completePreferences(request.getIds());
+        return "Marked as completed";
+    }
+
+
+
 
 
 
