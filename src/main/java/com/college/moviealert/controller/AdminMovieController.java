@@ -169,12 +169,4 @@ public class AdminMovieController {
         adminService.completePreferences(request.getIds());
         return "Marked as completed";
     }
-
-
-
-
-
-
-
-
 }
