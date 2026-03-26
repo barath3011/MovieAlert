@@ -65,6 +65,7 @@ public class NotificationService {
                     log.setTheatreName(newShow.getTheatre().getName());
                     log.setShowDate(newShow.getShowDate());
                     log.setShowTime(newShow.getShowTime());
+                    log.setMovieShowId(newShow.getId());
                     log.setStatus("PENDING");
                     log.setCreatedAt(LocalDateTime.now());
 

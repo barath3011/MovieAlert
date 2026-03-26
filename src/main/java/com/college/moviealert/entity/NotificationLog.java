@@ -28,4 +28,7 @@ public class NotificationLog {
     private LocalDate showDate;
 
     private LocalTime showTime;
+
+    @Column(name="movie_show_id", nullable=false)
+    private Long movieShowId;
 }
