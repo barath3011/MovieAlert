@@ -178,6 +178,7 @@ public class AdminMovieController {
     public String deleteMovie(@PathVariable Long id) {
         return adminService.deleteMovieById(id);
     }
+//    testing
 
 
 }
