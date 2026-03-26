@@ -3,6 +3,7 @@ package com.college.moviealert.controller;
 import com.college.moviealert.dto.*;
 import com.college.moviealert.entity.*;
 import com.college.moviealert.service.AdminMovieService;
+import com.college.moviealert.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,9 @@ public class AdminMovieController {
 
     @Autowired
     private AdminMovieService adminService;
+
+    @Autowired
+    private EmailService emailService;
 
     // ---------------- Create Movie ----------------
     @PostMapping(value = "/movie")
@@ -169,4 +173,11 @@ public class AdminMovieController {
         adminService.completePreferences(request.getIds());
         return "Marked as completed";
     }
+
+    @DeleteMapping("/movie/{id}")
+    public String deleteMovie(@PathVariable Long id) {
+        return adminService.deleteMovieById(id);
+    }
+
+
 }

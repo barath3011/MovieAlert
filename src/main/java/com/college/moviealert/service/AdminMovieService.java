@@ -4,6 +4,7 @@ import com.college.moviealert.dto.*;
 import com.college.moviealert.entity.*;
 import com.college.moviealert.enums.PreferenceStatus;
 import com.college.moviealert.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -13,10 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +38,8 @@ public class AdminMovieService {
     @Autowired
     private UpcomingMovieRepository upcomingMovieRepository;
 
+    @Autowired
+    private NotificationService notificationService;
 
 
     // ---------------- Create Movie ----------------
@@ -137,33 +137,10 @@ public class AdminMovieService {
                         new Theatre(request.getTheatreName())
                 ));
 
-
-// Date
-//        ShowDate showDate = showDateRepository
-//                .findByShowDate(request.getShowDate())
-//                .orElseGet(() -> showDateRepository.save(
-//                        new ShowDate(request.getShowDate())
-//                ));
-//
-//        List<Show> shows = new ArrayList<>();
-//
-//        for (LocalTime time : request.getShowTimes()) {
-//
-//            String timeStr = time.toString(); // "09:00"
-//
-//            Show show = showRepository
-//                    .findByShowTime(timeStr)
-//                    .orElseGet(() -> showRepository.save(
-//                            new Show(timeStr)
-//                    ));
-//
-//            shows.add(show);
-//        }
-
-
-
-
         int insertedCount = 0;
+
+        // ✅ NEW: store all created shows
+        List<MovieShow> newShows = new ArrayList<>();
 
         for (LocalTime time : request.getShowTimes()) {
 
@@ -185,7 +162,15 @@ public class AdminMovieService {
 
                 movieShowRepository.save(show);
                 insertedCount++;
+
+                // ✅ ADD TO LIST (instead of sending immediately)
+                newShows.add(show);
             }
+        }
+
+        // ✅ SEND NOTIFICATION ONCE (AFTER LOOP)
+        if (!newShows.isEmpty()) {
+            notificationService.notifyUsersForShows(newShows);
         }
 
         if (insertedCount == 0) {
@@ -194,7 +179,6 @@ public class AdminMovieService {
 
         return insertedCount + " new show(s) released successfully!";
     }
-
 
 
     // ---------------- GET SHOWS BY MOVIE ----------------
@@ -556,8 +540,25 @@ public class AdminMovieService {
         userPreferenceRepository.saveAll(preferences);
     }
 
+    @Transactional
+    public String deleteMovieById(Long movieId) {
 
+        // Find movie by ID
+        Optional<Movie> optionalMovie = movieRepository.findById(movieId);
+        if (!optionalMovie.isPresent()) {
+            return "Movie not found!";
+        }
 
+        Movie movie = optionalMovie.get();
+
+        // Delete related shows first
+        movieShowRepository.deleteByMovie(movie);
+
+        // Delete the movie
+        movieRepository.delete(movie);
+
+        return "Movie and its shows deleted successfully!";
+    }
 
 
 }
