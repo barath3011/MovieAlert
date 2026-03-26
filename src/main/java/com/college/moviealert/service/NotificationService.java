@@ -20,7 +20,7 @@ public class NotificationService {
     private UserPreferenceRepository userPreferenceRepository;
 
     @Autowired
-    private EmailService emailService; // Use EmailService for sending HTML emails
+    private EmailService emailService; // now uses SendGrid
 
     @Autowired
     private NotificationLogRepository notificationLogRepository;
@@ -104,6 +104,7 @@ public class NotificationService {
 
             if (email != null) {
                 String subject = "New Movie Show Alert!";
+                // ✅ Use SendGrid EmailService
                 emailSent = emailService.sendEmail(email, subject, emailBody.toString());
             }
 

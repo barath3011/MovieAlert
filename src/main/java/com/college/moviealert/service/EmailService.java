@@ -1,39 +1,49 @@
 package com.college.moviealert.service;
 
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import com.sendgrid.*;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    // ✅ Get SendGrid API key from environment variable
+    private final String apiKey = System.getenv("SENDGRID_API_KEY");
 
     public Boolean sendEmail(String toEmail, String subject, String body) {
+        if (apiKey == null) {
+            throw new RuntimeException("SENDGRID_API_KEY environment variable not set!");
+        }
+
+        // ✅ Set sender email (must be verified in SendGrid)
+        Email from = new Email("barathtech30@gmail.com");
+        Email to = new Email(toEmail);
+        Content content = new Content("text/html", body); // HTML content
+        Mail mail = new Mail(from, subject, to, content);
+
+        SendGrid sg = new SendGrid(apiKey);
+        Request request = new Request();
+
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
 
-            // ✅ Get sender email from environment variable
-            String fromEmail = System.getenv("SMTP_USERNAME");
-            if (fromEmail == null) {
-                throw new RuntimeException("SMTP_USERNAME environment variable not set!");
-            }
+            Response response = sg.api(request);
 
-            helper.setFrom(fromEmail);
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(body, true); // true = HTML email
+            System.out.println("Status Code: " + response.getStatusCode());
+            System.out.println("Body: " + response.getBody());
+            System.out.println("Headers: " + response.getHeaders());
 
-            mailSender.send(message);
-            System.out.println("HTML Email sent to: " + toEmail);
-            return true;
-        } catch (Exception e) {
+            return response.getStatusCode() >= 200 && response.getStatusCode() < 300;
+
+        } catch (IOException ex) {
             System.out.println("Failed to send email to: " + toEmail);
-            e.printStackTrace();
+            ex.printStackTrace();
             return false;
         }
     }

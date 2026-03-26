@@ -182,8 +182,16 @@ public class AdminMovieController {
 
     @GetMapping("/email")
     public String sendTestEmail() {
-        emailService.sendEmail("barathtech30@gmail.com", "Test Email", "Hello! This is a test email from Spring Boot.");
-        return "Email Sent!";
+        boolean sent = emailService.sendEmail(
+                "barathtech30@gmail.com",
+                "Test Email",
+                "Hello! This is a test email from Spring Boot using SendGrid."
+        );
+
+        // Optional: debug
+        System.out.println("SENDGRID_API_KEY=" + (System.getenv("SENDGRID_API_KEY") != null ? "set" : "null"));
+
+        return sent ? "Email Sent!" : "Failed to send email!";
     }
 
 }
