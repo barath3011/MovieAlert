@@ -180,5 +180,10 @@ public class AdminMovieController {
     }
 //    testing
 
+    @GetMapping("/email")
+    public String sendTestEmail() {
+        emailService.sendEmail("barathtech30@gmail.com", "Test Email", "Hello! This is a test email from Spring Boot.");
+        return "Email Sent!";
+    }
 
 }
