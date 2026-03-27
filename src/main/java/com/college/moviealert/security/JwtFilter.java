@@ -25,6 +25,15 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        // ✅ SKIP JWT FOR DELETE MOVIE API
+        if ("DELETE".equalsIgnoreCase(method) && path.startsWith("/api/movie")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -34,7 +43,6 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 String email = jwtUtil.extractEmail(token);
 
-                // VERY IMPORTANT CHECK
                 if (email != null &&
                         SecurityContextHolder.getContext().getAuthentication() == null) {
 
