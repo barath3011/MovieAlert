@@ -32,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/show").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/upcoming-movie").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/movie/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
