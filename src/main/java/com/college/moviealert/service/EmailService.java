@@ -1,50 +1,70 @@
 package com.college.moviealert.service;
 
-import com.sendgrid.*;
-import com.sendgrid.helpers.mail.Mail;
-import com.sendgrid.helpers.mail.objects.Content;
-import com.sendgrid.helpers.mail.objects.Email;
 import org.springframework.stereotype.Service;
+import sendinblue.ApiClient;
+import sendinblue.Configuration;
+import sendinblue.auth.ApiKeyAuth;
+import sibApi.TransactionalEmailsApi;
+import sibModel.*;
 
-import java.io.IOException;
+import java.util.*;
 
 @Service
 public class EmailService {
 
-    // ✅ Get SendGrid API key from environment variable
-    private final String apiKey = System.getenv("SENDGRID_API_KEY");
+    // ✅ Get Brevo API key from environment variable
+    private final String apiKey = System.getenv("BREVO_API_KEY");
 
     public Boolean sendEmail(String toEmail, String subject, String body) {
+
         if (apiKey == null) {
-            throw new RuntimeException("SENDGRID_API_KEY environment variable not set!");
+            throw new RuntimeException("BREVO_API_KEY environment variable not set!");
         }
-
-        // ✅ Set sender email (must be verified in SendGrid)
-        Email from = new Email("barathtech30@gmail.com");
-        Email to = new Email(toEmail);
-        Content content = new Content("text/html", body); // HTML content
-        Mail mail = new Mail(from, subject, to, content);
-
-        SendGrid sg = new SendGrid(apiKey);
-        Request request = new Request();
 
         try {
-            request.setMethod(Method.POST);
-            request.setEndpoint("mail/send");
-            request.setBody(mail.build());
+            // ✅ Configure API client
+            ApiClient defaultClient = Configuration.getDefaultApiClient();
+            ApiKeyAuth apiKeyAuth = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
+            apiKeyAuth.setApiKey(apiKey);
 
-            Response response = sg.api(request);
+            // ✅ Create API instance
+            TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
 
-            System.out.println("Status Code: " + response.getStatusCode());
-            System.out.println("Body: " + response.getBody());
-            System.out.println("Headers: " + response.getHeaders());
+            // ✅ Create email object
+            SendSmtpEmail email = new SendSmtpEmail();
 
-            return response.getStatusCode() >= 200 && response.getStatusCode() < 300;
+            // Sender (must be verified in Brevo)
+            email.setSender(new SendSmtpEmailSender()
+                    .email("barathtech30@gmail.com")
+                    .name("MovieAlert"));
 
-        } catch (IOException ex) {
-            System.out.println("Failed to send email to: " + toEmail);
-            ex.printStackTrace();
+            // Receiver
+            email.setTo(Collections.singletonList(
+                    new SendSmtpEmailTo().email(toEmail)
+            ));
+
+            // Subject & Content
+            email.setSubject(subject);
+            email.setHtmlContent(body);
+
+            // ✅ Send email
+            CreateSmtpEmail response = apiInstance.sendTransacEmail(email);
+
+            System.out.println("Message ID: " + response.getMessageId());
+
+            return true;
+
+        } catch (Exception e) {
+            System.out.println("❌ Failed to send email to: " + toEmail);
+
+            if (e instanceof sendinblue.ApiException) {
+                sendinblue.ApiException apiEx = (sendinblue.ApiException) e;
+                System.out.println("Status Code: " + apiEx.getCode());
+                System.out.println("Response Body: " + apiEx.getResponseBody());
+            }
+
+            e.printStackTrace();
             return false;
         }
+        }
     }
-}

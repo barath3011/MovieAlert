@@ -182,16 +182,17 @@ public class AdminMovieController {
 
     @GetMapping("/email")
     public String sendTestEmail() {
+
         boolean sent = emailService.sendEmail(
                 "barathtech30@gmail.com",
-                "Test Email",
-                "Hello! This is a test email from Spring Boot using SendGrid."
+                "🎬 Test Email from MovieAlert",
+                "<h3>Hello! 👋</h3><p>This is a test email from your MovieAlert app using Brevo 🚀</p>"
         );
 
-        // Optional: debug
-        System.out.println("SENDGRID_API_KEY=" + (System.getenv("SENDGRID_API_KEY") != null ? "set" : "null"));
+        // ✅ Debug Brevo API Key
+        System.out.println("BREVO_API_KEY=" +
+                (System.getenv("BREVO_API_KEY") != null ? "set" : "null"));
 
-        return sent ? "Email Sent!" : "Failed to send email!";
+        return sent ? "✅ Email Sent!" : "❌ Failed to send email!";
     }
-
 }

@@ -20,7 +20,7 @@ public class NotificationService {
     private UserPreferenceRepository userPreferenceRepository;
 
     @Autowired
-    private EmailService emailService; // now uses SendGrid
+    private EmailService emailService; // ✅ Now uses Brevo internally
 
     @Autowired
     private NotificationLogRepository notificationLogRepository;
@@ -80,23 +80,32 @@ public class NotificationService {
             List<MovieShow> shows = userShows.get(userId);
 
             StringBuilder emailBody = new StringBuilder();
-            emailBody.append("<html><body>");
-            emailBody.append("<h2>🌟 Hey, Your wait is over! 🌟</h2>");
+            emailBody.append("<html><body style='font-family:Arial;'>");
+
+            emailBody.append("<h2>🌟 Hey Movie Lover! Your wait is over! 🎉</h2>");
+            emailBody.append("<p>Good news! Your preferred movie show is now available:</p>");
 
             for (MovieShow show : shows) {
-                emailBody.append("<h3>🎬 Movie Name: ").append(show.getMovie().getName()).append("</h3>")
-                        .append("<p>📍 Theatre: ").append(show.getTheatre().getName()).append("<br>")
+                emailBody.append("<div style='border:1px solid #ddd;padding:10px;margin:10px 0;border-radius:8px;'>")
+                        .append("<h3>🎬 ").append(show.getMovie().getName()).append("</h3>")
+                        .append("<p>")
+                        .append("📍 Theatre: ").append(show.getTheatre().getName()).append("<br>")
                         .append("📅 Date: ").append(show.getShowDate()).append("<br>")
-                        .append("🕘 Showtimes: ").append(show.getShowTime()).append("</p>")
+                        .append("🕘 Time: ").append(show.getShowTime())
+                        .append("</p>")
                         .append("<a href='").append(show.getBookingUrl())
-                        .append("' style='display:inline-block;padding:10px 20px;margin:10px 0;background-color:#FF5733;color:white;text-decoration:none;border-radius:5px;'>")
-                        .append("🎟️ Book Your Seats Now")
-                        .append("</a><br><br>");
+                        .append("' style='display:inline-block;padding:10px 20px;background-color:#FF5733;color:white;text-decoration:none;border-radius:5px;'>")
+                        .append("🎟️ Book Now")
+                        .append("</a>")
+                        .append("</div>");
             }
 
-            emailBody.append("<p>✨ \"You’ve got first preference for booking since you saved this movie in your favorites. Grab your seats before anyone else!\" ✨</p>")
-                    .append("<p>Thank you for being a valued movie lover! 🍿💖</p>")
-                    .append("</body></html>");
+            emailBody.append("<p style='color:green;'><b>")
+                    .append("You got FIRST preference because you saved this movie! Book before others 🎯")
+                    .append("</b></p>");
+
+            emailBody.append("<p>🍿 Thank you for using MovieAlert!</p>");
+            emailBody.append("</body></html>");
 
             User user = userRepository.findById(userId).orElse(null);
             String email = (user != null) ? user.getEmail() : null;
@@ -104,8 +113,9 @@ public class NotificationService {
             boolean emailSent = false;
 
             if (email != null) {
-                String subject = "New Movie Show Alert!";
-                // ✅ Use SendGrid EmailService
+                String subject = "🎬 Your Preferred Movie is Now Available!";
+
+                // ✅ Uses Brevo EmailService internally
                 emailSent = emailService.sendEmail(email, subject, emailBody.toString());
             }
 
@@ -116,8 +126,8 @@ public class NotificationService {
                 notificationLogRepository.save(log);
             }
 
-            // Console
-            System.out.println("Email to User " + userId + ":\n" + emailBody);
+            // Console log
+            System.out.println("Email to User " + userId + " sent via Brevo");
         }
     }
 }
